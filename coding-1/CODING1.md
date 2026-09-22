@@ -421,7 +421,7 @@ From lowest to highest precedence:
 
 | Parser level | Operators |
 |---|---|
-| `parseOr()` | `||` |
+| `parseOr()` | `\|\|` |
 | `parseAnd()` | `&&` |
 | `parseEquality()` | `==` |
 | `parseComparison()` | `<`, `>` |
