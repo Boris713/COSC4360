@@ -287,7 +287,7 @@ Use the command:
 ./tinylang program.tl --tokens
 ```
 
-A good first input is:
+where `program.tl` is the `.tl` program/file you want to test. A good first input/example is:
 
 ```text
 fn main(): int {
@@ -295,6 +295,8 @@ fn main(): int {
     return x;
 }
 ```
+
+and you can save it as `program.tl` for testing.
 
 Verify that:
 - keywords are recognized correctly

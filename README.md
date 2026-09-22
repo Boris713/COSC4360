@@ -245,8 +245,8 @@ tinylang-starter/
 
 Read the detailed assignment document before coding:
 
-- [Coding Assignment 1: TinyLang Lexer and Parser](assignment1/INTRO.md)
-- [Coding Assignment 2: TinyLang Semantic Analysis and LLVM IR](assignment2/INTRO.md)
+- [Coding Assignment 1: TinyLang Lexer and Parser](https://github.com/apace-lab/COSC4360/blob/main/coding-1/CODING1.md)
+- [Coding Assignment 2: TinyLang Semantic Analysis and LLVM IR](https://github.com/apace-lab/COSC4360/blob/main/coding-2/CODING2.md )
 
 Each document explains the relevant compiler background, TinyLang rules, required functions, examples, testing strategy, common mistakes, and completion checklist.
 
