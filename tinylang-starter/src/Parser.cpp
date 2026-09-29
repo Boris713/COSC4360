@@ -76,7 +76,7 @@ Function Parser::parseMainFunction()
 
     std::string name = consume(TokenKind::Identifier, "expected 'main' after 'fn'").lexeme;
     if (name != "main")
-        error(previous(), "function has to be named 'main'");
+        error(previous(), "function has to be named 'main' not '" + name + "'");
 
     consume(TokenKind::LParen, "expected '(' after 'main'");
     consume(TokenKind::RParen, "expected ')' after '('");
@@ -125,7 +125,7 @@ StmtPtr Parser::parseStatement()
     case TokenKind::Identifier:
         return parseAssignment();
     default:
-        error(peek(), "expected a statement");
+        error(peek(), "expected a statement but found '" + peek().lexeme + "'");
     }
 }
 
@@ -146,7 +146,9 @@ StmtPtr Parser::parseVarDecl()
     if (match(TokenKind::Assign))
         initializer = parseExpression();
 
-    consume(TokenKind::Semicolon, "expected ';' after variable declaration");
+    // point at the last token so the error shows up on the right line
+    if (!match(TokenKind::Semicolon))
+        error(previous(), "expected ';' after '" + previous().lexeme + "'");
     return std::make_unique<VarDeclStmt>(name, type, std::move(initializer));
 }
 
@@ -160,7 +162,8 @@ StmtPtr Parser::parseAssignment()
     std::string name = consume(TokenKind::Identifier, "expected variable name").lexeme;
     consume(TokenKind::Assign, "expected '=' after " + name);
     ExprPtr value = parseExpression();
-    consume(TokenKind::Semicolon, "expected ';' after assignment");
+    if (!match(TokenKind::Semicolon))
+        error(previous(), "expected ';' after '" + previous().lexeme + "'");
     return std::make_unique<AssignStmt>(name, std::move(value));
 }
 
@@ -197,7 +200,8 @@ StmtPtr Parser::parseReturn()
 
     consume(TokenKind::KwReturn, "expected 'return'");
     ExprPtr value = parseExpression();
-    consume(TokenKind::Semicolon, "expected ';' after return expression");
+    if (!match(TokenKind::Semicolon))
+        error(previous(), "expected ';' after '" + previous().lexeme + "'");
     return std::make_unique<ReturnStmt>(std::move(value));
 }
 
@@ -208,7 +212,9 @@ Type Parser::parseType()
         return Type::Int;
     if (match(TokenKind::KwBool))
         return Type::Bool;
-    error(peek(), "expected type 'int' or 'bool'");
+    if (atEnd())
+        error(peek(), "expected type 'int' or 'bool' but found end of file");
+    error(peek(), "expected type 'int' or 'bool' but found '" + peek().lexeme + "'");
 }
 
 ExprPtr Parser::parseExpression()
@@ -338,5 +344,7 @@ ExprPtr Parser::parsePrimary()
         return inner;
     }
 
-    error(peek(), "expected expression");
+    if (atEnd())
+        error(peek(), "expected expression but found end of file");
+    error(peek(), "expected expression but found '" + peek().lexeme + "'");
 }

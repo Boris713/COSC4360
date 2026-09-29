@@ -26,6 +26,7 @@ Use `--ast` for all of them except `tokens_all.tl`, which uses `--tokens` since 
 ## Should fail
 
 - `lex_error_single_amp.tl`: lexical error. A single `&` isn't an operator, only `&&` is.
+- `lex_error_bad_number.tl`: lexical error. `123abc` isn't a number and names can't start with a digit.
 - `syntax_error_missing_semicolon.tl`: syntax error. No `;` after return.
 - `syntax_error_missing_paren.tl`: syntax error. The if is missing its `)`.
 - `syntax_error_unclosed_block.tl`: syntax error. A `{` never gets closed, so the parser hits the end of the file.

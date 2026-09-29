@@ -177,6 +177,18 @@ Token Lexer::lexInteger()
         text += advance();
     }
 
+    // letters stuck to a number like 123abc make it a bad number
+    if (std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_')
+    {
+        while (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_')
+            text += advance();
+
+        throw std::runtime_error(
+            "Lexical error at line " + std::to_string(startLine) +
+            ", column " + std::to_string(startColumn) +
+            ": invalid number '" + text + "'");
+    }
+
     return makeToken(TokenKind::Integer, text,
                      startLine, startColumn);
 }
@@ -219,74 +231,34 @@ std::vector<Token> Lexer::tokenize()
         //
         // Remember that ==, && and || are two-character tokens.
 
+        // tokens that are always just one character
+        static const std::unordered_map<char, TokenKind> singleChars = {
+            {'(', TokenKind::LParen},
+            {')', TokenKind::RParen},
+            {'{', TokenKind::LBrace},
+            {'}', TokenKind::RBrace},
+            {':', TokenKind::Colon},
+            {';', TokenKind::Semicolon},
+            {',', TokenKind::Comma},
+            {'+', TokenKind::Plus},
+            {'-', TokenKind::Minus},
+            {'*', TokenKind::Star},
+            {'/', TokenKind::Slash}, // "//" comments were already skipped so this is always division
+            {'<', TokenKind::Less},
+            {'>', TokenKind::Greater},
+        };
+
+        auto single = singleChars.find(c);
+        if (single != singleChars.end())
+        {
+            advance();
+            add(single->second, std::string(1, c));
+            continue;
+        }
+
+        // = && and || need to look at the next character too
         switch (c)
         {
-        case '(':
-            advance();
-            add(TokenKind::LParen, "(");
-            continue;
-
-        case ')':
-            advance();
-            add(TokenKind::RParen, ")");
-            continue;
-
-        case '{':
-            advance();
-            add(TokenKind::LBrace, "{");
-            continue;
-
-        case '}':
-            advance();
-            add(TokenKind::RBrace, "}");
-            continue;
-
-        case ':':
-            advance();
-            add(TokenKind::Colon, ":");
-            continue;
-
-        case ';':
-            advance();
-            add(TokenKind::Semicolon, ";");
-            continue;
-
-        case ',':
-            advance();
-            add(TokenKind::Comma, ",");
-            continue;
-
-        case '+':
-            advance();
-            add(TokenKind::Plus, "+");
-            continue;
-
-        case '-':
-            advance();
-            add(TokenKind::Minus, "-");
-            continue;
-
-        case '*':
-            advance();
-            add(TokenKind::Star, "*");
-            continue;
-
-        case '/':
-            // "//" comments were already skipped so this is always division
-            advance();
-            add(TokenKind::Slash, "/");
-            continue;
-
-        case '<':
-            advance();
-            add(TokenKind::Less, "<");
-            continue;
-
-        case '>':
-            advance();
-            add(TokenKind::Greater, ">");
-            continue;
-
         case '=':
             advance();
             if (peek() == '=')
