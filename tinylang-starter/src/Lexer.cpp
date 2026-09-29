@@ -3,78 +3,121 @@
 #include <stdexcept>
 #include <unordered_map>
 
-const char* tokenKindName(TokenKind kind) {
-    switch (kind) {
-        case TokenKind::End: return "End";
-        case TokenKind::Identifier: return "Identifier";
-        case TokenKind::Integer: return "Integer";
-        case TokenKind::KwFn: return "fn";
-        case TokenKind::KwLet: return "let";
-        case TokenKind::KwInt: return "int";
-        case TokenKind::KwBool: return "bool";
-        case TokenKind::KwIf: return "if";
-        case TokenKind::KwElse: return "else";
-        case TokenKind::KwReturn: return "return";
-        case TokenKind::KwTrue: return "true";
-        case TokenKind::KwFalse: return "false";
-        case TokenKind::LParen: return "(";
-        case TokenKind::RParen: return ")";
-        case TokenKind::LBrace: return "{";
-        case TokenKind::RBrace: return "}";
-        case TokenKind::Colon: return ":";
-        case TokenKind::Semicolon: return ";";
-        case TokenKind::Comma: return ",";
-        case TokenKind::Assign: return "=";
-        case TokenKind::Plus: return "+";
-        case TokenKind::Minus: return "-";
-        case TokenKind::Star: return "*";
-        case TokenKind::Slash: return "/";
-        case TokenKind::Less: return "<";
-        case TokenKind::Greater: return ">";
-        case TokenKind::EqualEqual: return "==";
-        case TokenKind::AndAnd: return "&&";
-        case TokenKind::OrOr: return "||";
+const char *tokenKindName(TokenKind kind)
+{
+    switch (kind)
+    {
+    case TokenKind::End:
+        return "End";
+    case TokenKind::Identifier:
+        return "Identifier";
+    case TokenKind::Integer:
+        return "Integer";
+    case TokenKind::KwFn:
+        return "fn";
+    case TokenKind::KwLet:
+        return "let";
+    case TokenKind::KwInt:
+        return "int";
+    case TokenKind::KwBool:
+        return "bool";
+    case TokenKind::KwIf:
+        return "if";
+    case TokenKind::KwElse:
+        return "else";
+    case TokenKind::KwReturn:
+        return "return";
+    case TokenKind::KwTrue:
+        return "true";
+    case TokenKind::KwFalse:
+        return "false";
+    case TokenKind::LParen:
+        return "(";
+    case TokenKind::RParen:
+        return ")";
+    case TokenKind::LBrace:
+        return "{";
+    case TokenKind::RBrace:
+        return "}";
+    case TokenKind::Colon:
+        return ":";
+    case TokenKind::Semicolon:
+        return ";";
+    case TokenKind::Comma:
+        return ",";
+    case TokenKind::Assign:
+        return "=";
+    case TokenKind::Plus:
+        return "+";
+    case TokenKind::Minus:
+        return "-";
+    case TokenKind::Star:
+        return "*";
+    case TokenKind::Slash:
+        return "/";
+    case TokenKind::Less:
+        return "<";
+    case TokenKind::Greater:
+        return ">";
+    case TokenKind::EqualEqual:
+        return "==";
+    case TokenKind::AndAnd:
+        return "&&";
+    case TokenKind::OrOr:
+        return "||";
     }
     return "?";
 }
 
 Lexer::Lexer(std::string source) : source_(std::move(source)) {}
 
-char Lexer::peek(size_t offset) const {
-    if (pos_ + offset >= source_.size()) return '\0';
+char Lexer::peek(size_t offset) const
+{
+    if (pos_ + offset >= source_.size())
+        return '\0';
     return source_[pos_ + offset];
 }
 
-bool Lexer::atEnd() const {
+bool Lexer::atEnd() const
+{
     return pos_ >= source_.size();
 }
 
-char Lexer::advance() {
+char Lexer::advance()
+{
     char c = source_[pos_++];
-    if (c == '\n') {
+    if (c == '\n')
+    {
         ++line_;
         column_ = 1;
-    } else {
+    }
+    else
+    {
         ++column_;
     }
     return c;
 }
 
 Token Lexer::makeToken(TokenKind kind,
-                       const std::string& lexeme,
+                       const std::string &lexeme,
                        int line,
-                       int column) const {
+                       int column) const
+{
     return Token{kind, lexeme, line, column};
 }
 
-void Lexer::skipWhitespaceAndComments() {
-    while (!atEnd()) {
-        if (std::isspace(static_cast<unsigned char>(peek()))) {
+void Lexer::skipWhitespaceAndComments()
+{
+    while (!atEnd())
+    {
+        if (std::isspace(static_cast<unsigned char>(peek())))
+        {
             advance();
             continue;
         }
 
-        if (peek() == '/' && peek(1) == '/') {
+        if (peek() == '/' && peek(1) == '/')
+        {
             while (!atEnd() && peek() != '\n')
                 advance();
             continue;
@@ -84,7 +127,8 @@ void Lexer::skipWhitespaceAndComments() {
     }
 }
 
-Token Lexer::lexIdentifierOrKeyword() {
+Token Lexer::lexIdentifierOrKeyword()
+{
     // TODO(A1): Read [A-Za-z_][A-Za-z0-9_]*.
     //
     // Then recognize these keywords:
@@ -94,42 +138,76 @@ Token Lexer::lexIdentifierOrKeyword() {
 
     int startLine = line_;
     int startColumn = column_;
+    std::string text;
 
-    // Starter placeholder: consume one character so the compiler
-    // can build before students implement this routine.
-    std::string text(1, advance());
-    return makeToken(TokenKind::Identifier, text,
-                     startLine, startColumn);
+    while (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_')
+    {
+        /* dont have to check starts with letter since tokenize() already does */
+        text += advance();
+    }
+
+    static const std::unordered_map<std::string, TokenKind> keywords = {
+        {"fn", TokenKind::KwFn},
+        {"let", TokenKind::KwLet},
+        {"int", TokenKind::KwInt},
+        {"bool", TokenKind::KwBool},
+        {"if", TokenKind::KwIf},
+        {"else", TokenKind::KwElse},
+        {"return", TokenKind::KwReturn},
+        {"true", TokenKind::KwTrue},
+        {"false", TokenKind::KwFalse},
+    };
+
+    auto it = keywords.find(text);
+    if (it != keywords.end())
+        return makeToken(it->second, text, startLine, startColumn); // its a keyword
+    return makeToken(TokenKind::Identifier, text, startLine, startColumn);
 }
 
-Token Lexer::lexInteger() {
+Token Lexer::lexInteger()
+{
     // TODO(A1): Consume a complete sequence of decimal digits.
 
     int startLine = line_;
     int startColumn = column_;
+    std::string text;
 
-    std::string text(1, advance());
+    while (std::isdigit(static_cast<unsigned char>(peek())))
+    {
+        text += advance();
+    }
+
     return makeToken(TokenKind::Integer, text,
                      startLine, startColumn);
 }
 
-std::vector<Token> Lexer::tokenize() {
+std::vector<Token> Lexer::tokenize()
+{
     std::vector<Token> tokens;
 
-    while (!atEnd()) {
+    while (!atEnd())
+    {
         skipWhitespaceAndComments();
-        if (atEnd()) break;
+        if (atEnd())
+            break;
 
         int startLine = line_;
         int startColumn = column_;
         char c = peek();
 
-        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
+        auto add = [&](TokenKind kind, const std::string &lexeme)
+        {
+            tokens.push_back(makeToken(kind, lexeme, startLine, startColumn));
+        };
+
+        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_')
+        {
             tokens.push_back(lexIdentifierOrKeyword());
             continue;
         }
 
-        if (std::isdigit(static_cast<unsigned char>(c))) {
+        if (std::isdigit(static_cast<unsigned char>(c)))
+        {
             tokens.push_back(lexInteger());
             continue;
         }
@@ -141,15 +219,114 @@ std::vector<Token> Lexer::tokenize() {
         //
         // Remember that ==, && and || are two-character tokens.
 
+        switch (c)
+        {
+        case '(':
+            advance();
+            add(TokenKind::LParen, "(");
+            continue;
+
+        case ')':
+            advance();
+            add(TokenKind::RParen, ")");
+            continue;
+
+        case '{':
+            advance();
+            add(TokenKind::LBrace, "{");
+            continue;
+
+        case '}':
+            advance();
+            add(TokenKind::RBrace, "}");
+            continue;
+
+        case ':':
+            advance();
+            add(TokenKind::Colon, ":");
+            continue;
+
+        case ';':
+            advance();
+            add(TokenKind::Semicolon, ";");
+            continue;
+
+        case ',':
+            advance();
+            add(TokenKind::Comma, ",");
+            continue;
+
+        case '+':
+            advance();
+            add(TokenKind::Plus, "+");
+            continue;
+
+        case '-':
+            advance();
+            add(TokenKind::Minus, "-");
+            continue;
+
+        case '*':
+            advance();
+            add(TokenKind::Star, "*");
+            continue;
+
+        case '/':
+            // "//" comments were already skipped so this is always division
+            advance();
+            add(TokenKind::Slash, "/");
+            continue;
+
+        case '<':
+            advance();
+            add(TokenKind::Less, "<");
+            continue;
+
+        case '>':
+            advance();
+            add(TokenKind::Greater, ">");
+            continue;
+
+        case '=':
+            advance();
+            if (peek() == '=')
+            {
+                advance();
+                add(TokenKind::EqualEqual, "==");
+            }
+            else
+            {
+                add(TokenKind::Assign, "=");
+            }
+            continue;
+
+        case '&':
+            if (peek(1) == '&')
+            {
+                advance();
+                advance();
+                add(TokenKind::AndAnd, "&&");
+                continue;
+            }
+            break; // single & is an error
+
+        case '|':
+            if (peek(1) == '|')
+            {
+                advance();
+                advance();
+                add(TokenKind::OrOr, "||");
+                continue;
+            }
+            break; // single | is an error
+        }
         throw std::runtime_error(
             "Lexical error at line " + std::to_string(startLine) +
             ", column " + std::to_string(startColumn) +
-            ": unexpected character '" + std::string(1, c) + "'"
-        );
+            ": unexpected character '" + std::string(1, c) + "'");
     }
 
     tokens.push_back(
-        makeToken(TokenKind::End, "", line_, column_)
-    );
+        makeToken(TokenKind::End, "", line_, column_));
     return tokens;
 }
