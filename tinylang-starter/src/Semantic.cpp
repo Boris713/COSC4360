@@ -93,7 +93,7 @@ void SemanticAnalyzer::checkStmt(const Stmt &stmt)
         if (decl->initializer)
         {
             Type initType = checkExpr(*decl->initializer);
-            if (initType != decl->type)
+            if (initType != Type::Error && initType != decl->type)
                 report("cannot initialize variable '" + decl->name + "' of type " +
                        typeName(decl->type) + " with " + typeName(initType));
         }
@@ -114,7 +114,7 @@ void SemanticAnalyzer::checkStmt(const Stmt &stmt)
             return;
         }
 
-        if (valueType != varType)
+        if (valueType != Type::Error && valueType != varType)
             report("cannot assign " + typeName(valueType) + " to variable '" +
                    assign->name + "' of type " + typeName(varType));
         return;
@@ -123,7 +123,7 @@ void SemanticAnalyzer::checkStmt(const Stmt &stmt)
     if (auto *ret = dynamic_cast<const ReturnStmt *>(&stmt))
     {
         Type type = checkExpr(*ret->value);
-        if (type != currentReturnType_)
+        if (type != Type::Error && type != currentReturnType_)
             report("return expression has type " + typeName(type) +
                    "; expected " + typeName(currentReturnType_));
         return;
@@ -132,7 +132,7 @@ void SemanticAnalyzer::checkStmt(const Stmt &stmt)
     if (auto *ifStmt = dynamic_cast<const IfStmt *>(&stmt))
     {
         Type condType = checkExpr(*ifStmt->condition);
-        if (condType != Type::Bool)
+        if (condType != Type::Error && condType != Type::Bool)
             report("if condition must have type bool");
 
         // checkBlock gives each block its own scope
@@ -190,64 +190,23 @@ Type SemanticAnalyzer::checkExpr(const Expr &expr)
         Type right = checkExpr(*bin->rhs);
         std::string op = bin->op;
 
-        if (op == "+")
+        // one side already had an error so dont report another one
+        if (left == Type::Error || right == Type::Error)
+            return Type::Error;
+
+        // + - * / < > all need two ints
+        if (op == "+" || op == "-" || op == "*" || op == "/" || op == "<" || op == ">")
         {
             if (left != Type::Int || right != Type::Int)
             {
-                report("operator '+' requires int operands");
+                report("operator '" + op + "' requires int operands");
                 return Type::Error;
             }
+
+            // math gives an int and compares give a bool
+            if (op == "<" || op == ">")
+                return Type::Bool;
             return Type::Int;
-        }
-
-        if (op == "-")
-        {
-            if (left != Type::Int || right != Type::Int)
-            {
-                report("operator '-' requires int operands");
-                return Type::Error;
-            }
-            return Type::Int;
-        }
-
-        if (op == "*")
-        {
-            if (left != Type::Int || right != Type::Int)
-            {
-                report("operator '*' requires int operands");
-                return Type::Error;
-            }
-            return Type::Int;
-        }
-
-        if (op == "/")
-        {
-            if (left != Type::Int || right != Type::Int)
-            {
-                report("operator '/' requires int operands");
-                return Type::Error;
-            }
-            return Type::Int;
-        }
-
-        if (op == "<")
-        {
-            if (left != Type::Int || right != Type::Int)
-            {
-                report("operator '<' requires int operands");
-                return Type::Error;
-            }
-            return Type::Bool;
-        }
-
-        if (op == ">")
-        {
-            if (left != Type::Int || right != Type::Int)
-            {
-                report("operator '>' requires int operands");
-                return Type::Error;
-            }
-            return Type::Bool;
         }
 
         if (op == "==")

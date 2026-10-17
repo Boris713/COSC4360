@@ -40,7 +40,13 @@ bool CodeGenerator::generate(const Program &program)
 
     builder_->SetInsertPoint(entry);
 
-    return emitBlock(*program.mainFunction.body);
+    if (!emitBlock(*program.mainFunction.body))
+        return false;
+
+    // main has no return at the end so return 0
+    if (!builder_->GetInsertBlock()->getTerminator())
+        builder_->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 0));
+    return true;
 }
 
 bool CodeGenerator::emitBlock(const BlockStmt &block)
@@ -72,6 +78,8 @@ bool CodeGenerator::emitStmt(const Stmt &stmt)
     // Save slot in variables_.
     //
     // IfStmt and bool LLVM generation may be extra credit.
+
+    // semantic analysis already passed so all the types here are right
 
     // code after a return in the same block can never run so skip it
     if (builder_->GetInsertBlock()->getTerminator())

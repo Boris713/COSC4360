@@ -1,6 +1,6 @@
 // bool variables with and or and equals
 fn main(): int {
-    let yes: bool = 3 > 2;
+    let yes: bool = 2 < 3;
     let no: bool = false;
     let r: int = 0;
 
